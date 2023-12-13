@@ -77,7 +77,7 @@ def GetImage(cam, reader, x, y, w, h, res_w, res_h):
     time = now.strftime("%m%d%Y_%H%M%S")
 
     #letter not detected
-    if detected_letter != None:
+    if detected_letter == None:
         detected_letter = 'X'
 
     toss = {
