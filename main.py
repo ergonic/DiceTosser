@@ -129,7 +129,7 @@ def main():
         sleep(2)
         toss = GetImage(cam, reader, x, y, w, h, res_w, res_h)
 
-        if toss == None:
+        if toss['toss'] == 'X':
             print("Could not detect.")
         else:
             print(toss['toss'], toss['time'], len(toss['data']))
