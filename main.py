@@ -133,12 +133,11 @@ def main():
             print("Could not detect.")
         else:
             print(toss['toss'], toss['time'], len(toss['data']))
-
             #save img
             save_image(dataset_output_path, toss)
 
-            #db insert
-            DB_test.insert_toss(cnx, toss)
+        #db insert
+        DB_test.insert_toss(cnx, toss)
 
         #sleep(0.2)
 
