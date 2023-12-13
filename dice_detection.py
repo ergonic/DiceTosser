@@ -17,7 +17,7 @@ def initialize_ocr_reader():
 
     return reader
 
-def detect_circle_coordinates(image):
+def detect_circle_coordinates(image, res_w, res_h):
 
     # Convert the image to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -25,18 +25,22 @@ def detect_circle_coordinates(image):
     # Apply Gaussian blur to reduce noise and improve circle detection
     gray = cv2.GaussianBlur(gray, (9, 9), 2)
 
+    r_min = int((120/1920) * res_w)
+    r_max = int((220/1920) * res_w)
+
     # Use the Hough Circle Transform to detect circles
     circles = cv2.HoughCircles(
-        gray, cv2.HOUGH_GRADIENT, dp=1, minDist=50, param1=50, param2=30, minRadius=0, maxRadius=0
+        gray, cv2.HOUGH_GRADIENT, dp=1, minDist=50, param1=50, param2=30, minRadius=r_min, maxRadius=r_max
     )
 
     (imgx, imgy, _) = image.shape
+
 
     if circles is not None:
         circles = np.uint16(np.around(circles))
         for circle in circles[0, :]:
             x, y, r = circle
-            if r > 120 and r < 220:
+            if r > r_min and r < r_max:
                 try:
                     ret = x - r, y - r, 2 * r, 2 * r
                     # Stop when the detected blob is outside of the image
@@ -52,6 +56,7 @@ def detect_circle_coordinates(image):
 
 def test_out_rotations(image, reader):
     original = copy.copy(image)
+
     detections = []
     for rotation in range(0,360,15):
         # grab the dimensions of the image and calculate the center of the rotation
@@ -70,7 +75,7 @@ def test_out_rotations(image, reader):
         # Print results
         for detection in result:
             filtered_text = ''.join(filter(lambda x: 'A' <= x <= 'F', detection[1].upper()))
-            if filtered_text != '':
+            if filtered_text != '' and len(filtered_text) == 1:
                 #return filtered_text
                 detections.append(filtered_text)
 
