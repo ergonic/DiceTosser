@@ -50,7 +50,6 @@ def GetImage(cam, reader, x, y, w, h, res_w, res_h):
         toss = {
             'toss': 'X',
             'time': time,
-            'data': None,
             'filename': '-'
         }
         return toss
@@ -95,7 +94,7 @@ def GetImage(cam, reader, x, y, w, h, res_w, res_h):
 #A, B, C, D, E, F, X
 def save_image(path, toss):
 
-    if toss['data'] != None:
+    if 'data' in toss.keys():
         filepath = path + "\\" + toss['toss'] + "\\" + toss['filename']
         cv2.imwrite(filepath, toss['data'])
 
