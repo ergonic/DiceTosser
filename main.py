@@ -119,10 +119,10 @@ def main():
     cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
     res_w = cam.get(cv2.CAP_PROP_FRAME_WIDTH)
     res_h = cam.get(cv2.CAP_PROP_FRAME_HEIGHT)
-    x = int((800/1920) * res_w)
-    y = int((400/1080) * res_h)
-    w = int((450/1920) * res_w)
-    h = int((450/1080) * res_h)
+    x = int((650 / 1920) * res_w)
+    y = int((250 / 1080) * res_h)
+    w = int((750 / 1920) * res_w)
+    h = int((750 / 1080) * res_h)
 
     while True:
         DiceIt(my_ev3)
@@ -133,8 +133,8 @@ def main():
             print("Could not detect.")
         else:
             print(toss['toss'], toss['time'], len(toss['data']))
-            #save img
-            save_image(dataset_output_path, toss)
+        #save img
+        save_image(dataset_output_path, toss)
 
         #db insert
         DB_test.insert_toss(cnx, toss)
