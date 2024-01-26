@@ -10,6 +10,11 @@ import cv2
 import numpy as np
 import easyocr
 from collections import Counter
+import torch
+from nn import SimpleCNN
+import torchvision.transforms as transforms
+
+model = None
 
 # to get reader
 def initialize_ocr_reader():
@@ -90,3 +95,52 @@ def get_frame_center(frame, x, y, w, h):
     frame_center = frame[y:y + h, x:x + w]
 
     return frame_center
+
+
+def init_nn():
+
+    global model
+
+    # Create the model instance
+    model = SimpleCNN(num_classes=6)
+
+    # Load the saved state dict
+    model.load_state_dict(torch.load('model_weights.pth'))
+
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+
+    # Set the model to evaluation mode
+    model.eval()
+
+
+def get_nn_label(dice_image):
+
+    global model
+    # Define a transform to convert
+    # the image to torch tensor
+    # Convert to PyTorch tensor and normalize
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    ])
+    input_tensor = transform(dice_image)
+
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    input_tensor = input_tensor.to(device)
+
+    # Make a prediction
+    with torch.no_grad():
+        prediction = model(input_tensor)
+
+    # Process the prediction as needed (e.g., apply softmax if required)
+    softmax = torch.nn.Softmax(dim=1)
+    probabilities = softmax(prediction)
+    print("Probs:", probabilities)
+    predicted_class = torch.argmax(probabilities, dim=1)
+
+    # Output the predicted class
+    print("Predicted class:", predicted_class.item())
+
+
+
