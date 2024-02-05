@@ -97,7 +97,7 @@ def get_frame_center(frame, x, y, w, h):
     return frame_center
 
 
-def init_nn():
+def init_nn(model_path):
 
     global model
 
@@ -105,7 +105,7 @@ def init_nn():
     model = SimpleCNN(num_classes=6)
 
     # Load the saved state dict
-    model.load_state_dict(torch.load('model_weights.pth'))
+    model.load_state_dict(torch.load(model_path))
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model.to(device)
@@ -122,7 +122,7 @@ def get_nn_label(dice_image):
     # Convert to PyTorch tensor and normalize
     transform = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        transforms.Normalize([0.4798, 0.4511, 0.4503], [0.1495, 0.1556, 0.1532])
     ])
     input_tensor = transform(dice_image)
 

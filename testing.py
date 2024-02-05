@@ -4,17 +4,16 @@ import cv2
 import ev3_dc as ev3
 from time import sleep
 from datetime import datetime
-
 import numpy as np
-
 import dice_detection
 import DB_test
 import dice_detection
 import math
 import matplotlib.pyplot as plt
+import camera
 
 def GetImage(cam, reader, x, y, w, h, res_w, res_h):
-    ret, frame = cam.read()
+    frame = cam.read()
     center = dice_detection.get_frame_center(frame, x, y, w, h)
 
     cv2.rectangle(frame, (x, y), (x + w,y + h), (255, 255, 0), 2)
@@ -53,7 +52,7 @@ def GetImage(cam, reader, x, y, w, h, res_w, res_h):
     detected_letter = dice_detection.test_out_rotations(resized_dice, reader)
     print("OCR:",detected_letter)
     nn_letter = dice_detection.get_nn_label(resized_dice)
-    #print
+    #print('CNN output:',nn_letter)
     cv2.putText(frame, detected_letter, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
     cv2.imshow("Dice detection", smaller_frame)
@@ -77,15 +76,13 @@ def GetImage(cam, reader, x, y, w, h, res_w, res_h):
 
 def main():
 
-    dice_detection.init_nn()
+    dice_detection.init_nn('model_weights.pth')
 
     # set variables for openCV and OCR
-    cam = cv2.VideoCapture(0)
+    cam = camera.CameraCapture(0)
     reader = dice_detection.initialize_ocr_reader()
-    cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-    cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-    res_w = cam.get(cv2.CAP_PROP_FRAME_WIDTH)
-    res_h = cam.get(cv2.CAP_PROP_FRAME_HEIGHT)
+    res_w = cam.get_w()
+    res_h = cam.get_h()
 
     x = int((650/1920) * res_w)
     y = int((250/1080) * res_h)
@@ -103,7 +100,7 @@ def main():
         pass
 
     # release all OpenCV thingies
-    cam.release()
+    cam.stop()
     cv2.destroyAllWindows()
 
 

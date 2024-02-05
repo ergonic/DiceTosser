@@ -1,3 +1,4 @@
+import os
 import random
 
 import cv2
@@ -6,6 +7,7 @@ from time import sleep
 from datetime import datetime
 import dice_detection
 import DB_test
+import camera
 
 
 # initializes connection to the ev3 brick
@@ -37,8 +39,13 @@ def DiceIt(my_ev3):
 
 
 def GetImage(cam, reader, x, y, w, h, res_w, res_h):
-    ret, frame = cam.read()
+    frame = cam.read()
+
+    # cv2.imshow("Original", frame)
+
     center = dice_detection.get_frame_center(frame, x, y, w, h)
+
+    # cv2.imshow("Center", center)
 
     # blob detection
     dx, dy, dw, dh = dice_detection.detect_circle_coordinates(center, res_w, res_h)
@@ -103,7 +110,7 @@ def main():
 
     # output photos will be saved here
     # requires subdirectiories A, B, C, D, E, F, X
-    dataset_output_path = "D:\\dicetoss"
+    dataset_output_path = "out" + os.pathsep
 
     # connector to EV3 brick
     my_ev3 = ev3.EV3(protocol=ev3.USB)
@@ -113,12 +120,11 @@ def main():
     cnx = DB_test.connect()
 
     # set variables for openCV and OCR
-    cam = cv2.VideoCapture(0)
+    cam = camera.CameraCapture(0)
     reader = dice_detection.initialize_ocr_reader()
-    cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-    cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-    res_w = cam.get(cv2.CAP_PROP_FRAME_WIDTH)
-    res_h = cam.get(cv2.CAP_PROP_FRAME_HEIGHT)
+    res_w = cam.get_w()
+    res_h = cam.get_h()
+
     x = int((650 / 1920) * res_w)
     y = int((250 / 1080) * res_h)
     w = int((750 / 1920) * res_w)
@@ -148,8 +154,9 @@ def main():
         pass
 
     # release all OpenCV thingies
-    cam.release()
+    cam.stop()
     cv2.destroyAllWindows()
+    DB_test.close_connection(cnx)
 
 if __name__ == '__main__':
     #ev3_init()
