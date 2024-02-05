@@ -12,7 +12,7 @@ import math
 import matplotlib.pyplot as plt
 import camera
 
-def GetImage(cam, reader, x, y, w, h, res_w, res_h):
+def GetImage(cam, reader, x, y, w, h, res_w, res_h, model):
     frame = cam.read()
     center = dice_detection.get_frame_center(frame, x, y, w, h)
 
@@ -51,7 +51,7 @@ def GetImage(cam, reader, x, y, w, h, res_w, res_h):
     #
     detected_letter = dice_detection.test_out_rotations(resized_dice, reader)
     print("OCR:",detected_letter)
-    nn_letter = dice_detection.get_nn_label(resized_dice)
+    nn_letter = dice_detection.get_nn_label(model, resized_dice)
     #print('CNN output:',nn_letter)
     cv2.putText(frame, detected_letter, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
@@ -76,7 +76,7 @@ def GetImage(cam, reader, x, y, w, h, res_w, res_h):
 
 def main():
 
-    dice_detection.init_nn('model_weights.pth')
+    model = dice_detection.init_nn('model_weights.pth')
 
     # set variables for openCV and OCR
     cam = camera.CameraCapture(0)
@@ -91,7 +91,7 @@ def main():
 
     while True:
 
-        toss = GetImage(cam, reader, x, y, w, h, res_w, res_h)
+        toss = GetImage(cam, reader, x, y, w, h, res_w, res_h, model)
 
         # end with whatever key pressed
         if cv2.waitKey(1) != -1:

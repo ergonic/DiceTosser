@@ -14,8 +14,6 @@ import torch
 from nn import SimpleCNN
 import torchvision.transforms as transforms
 
-model = None
-
 # to get reader
 def initialize_ocr_reader():
     reader = easyocr.Reader(['en'])
@@ -99,13 +97,13 @@ def get_frame_center(frame, x, y, w, h):
 
 def init_nn(model_path):
 
-    global model
-
     # Create the model instance
     model = SimpleCNN(num_classes=6)
 
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
     # Load the saved state dict
-    model.load_state_dict(torch.load(model_path))
+    model.load_state_dict(torch.load(model_path, map_location=device))
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model.to(device)
@@ -113,10 +111,14 @@ def init_nn(model_path):
     # Set the model to evaluation mode
     model.eval()
 
+    return model
 
-def get_nn_label(dice_image):
 
-    global model
+def get_nn_label(model, dice_image):
+
+    # Set the model to evaluation mode
+    model.eval()
+
     # Define a transform to convert
     # the image to torch tensor
     # Convert to PyTorch tensor and normalize
@@ -136,6 +138,7 @@ def get_nn_label(dice_image):
     # Process the prediction as needed (e.g., apply softmax if required)
     softmax = torch.nn.Softmax(dim=1)
     probabilities = softmax(prediction)
+    print("Prediction:", prediction)
     print("Probs:", probabilities)
     predicted_class = torch.argmax(probabilities, dim=1)
 
