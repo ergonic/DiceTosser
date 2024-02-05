@@ -1,3 +1,4 @@
+import os
 import random
 
 import cv2
@@ -11,6 +12,10 @@ import dice_detection
 import math
 import matplotlib.pyplot as plt
 import camera
+
+import torch
+from nn import SimpleCNN
+import torchvision.transforms as transforms
 
 def GetImage(cam, reader, x, y, w, h, res_w, res_h, model):
     frame = cam.read()
@@ -103,7 +108,43 @@ def main():
     cam.stop()
     cv2.destroyAllWindows()
 
+def main2():
+
+    model = dice_detection.init_nn('model_weights.pth')
+
+    filenames = os.listdir("in")
+    print(filenames)
+
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize([0.4798, 0.4511, 0.4503], [0.1495, 0.1556, 0.1532])
+    ])
+
+    # Process the prediction as needed (e.g., apply softmax if required)
+    softmax = torch.nn.Softmax(dim=1)
+
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+    for file in filenames:
+        img = cv2.imread(os.path.join('in',file))
+
+        input_tensor = transform(img)
+
+        input_tensor = input_tensor.to(device)
+
+        # Make a prediction
+        with torch.no_grad():
+            prediction = model(input_tensor)
+
+        probabilities = softmax(prediction)
+        print("Prediction:", prediction)
+        print("Probs:", probabilities)
+        predicted_class = torch.argmax(probabilities, dim=1)
+
+        # Output the predicted class
+        print("Predicted class:", predicted_class.item())
+
 
 if __name__ == '__main__':
-    main()
+    main2()
 

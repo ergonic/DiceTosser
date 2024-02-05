@@ -116,9 +116,6 @@ def init_nn(model_path):
 
 def get_nn_label(model, dice_image):
 
-    # Set the model to evaluation mode
-    model.eval()
-
     # Define a transform to convert
     # the image to torch tensor
     # Convert to PyTorch tensor and normalize

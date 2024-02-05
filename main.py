@@ -102,7 +102,7 @@ def GetImage(cam, reader, x, y, w, h, res_w, res_h):
 def save_image(path, toss):
 
     if 'data' in toss.keys():
-        filepath = path + "\\" + toss['toss'] + "\\" + toss['filename']
+        filepath = os.path.join(path,toss['toss'],toss['filename'])
         cv2.imwrite(filepath, toss['data'])
 
 
@@ -110,7 +110,7 @@ def main():
 
     # output photos will be saved here
     # requires subdirectiories A, B, C, D, E, F, X
-    dataset_output_path = "out" + os.pathsep
+    dataset_output_path = 'out'
 
     # connector to EV3 brick
     my_ev3 = ev3.EV3(protocol=ev3.USB)
