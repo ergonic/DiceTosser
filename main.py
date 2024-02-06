@@ -8,6 +8,7 @@ from datetime import datetime
 import dice_detection
 import DB_test
 import camera
+from thread_task import Sleep
 
 
 # initializes connection to the ev3 brick
@@ -19,6 +20,25 @@ def ev3_init():
         verbosity=1
     )
     my_ev3.sync_mode = ev3.SYNC
+
+def DiceItRirect(my_ev3):
+
+    with my_ev3.Motor(
+            ev3.PORT_B,
+            protocol=ev3.USB
+    ) as my_motor:
+        movement_plan = (
+                my_motor.move_by(30, speed=100, ramp_up=90, ramp_down=90, brake=True) +
+                Sleep(0.1) +
+                my_motor.move_by(-30, speed=100, ramp_up=90, ramp_down=90, brake=True) +
+                Sleep(0.1) +
+                my_motor.stop_as_task(brake=False)
+        )
+
+        movement_plan.start(thread=False)
+        #movement_plan.join()
+
+    pass
 
 def DiceIt(my_ev3):
     ops = b''.join((
