@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torchvision import datasets, transforms
 import torch.utils.data as data
+import os
 
 # Define a simple CNN architecture
 class SimpleCNN(nn.Module):
@@ -39,16 +40,12 @@ def model_learning():
             transforms.ToTensor(),
             transforms.ColorJitter(0.2,0.2,0.2,0.1),
             transforms.Normalize([0.4798, 0.4511, 0.4503], [0.1495, 0.1556, 0.1532])
-        ]),
-        'val': transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize([0.4798, 0.4511, 0.4503], [0.1495, 0.1556, 0.1532])
-        ]),
+        ])
     }
 
     # Create your dataset (replace 'your_data_dir' with the path to your dataset)
-    dataset = datasets.ImageFolder(root='D:\\dicetoss_clean_test', transform=data_transforms['train'])
-
+    dataset = datasets.ImageFolder(root=os.path.join('D:','dicetoss_clean_test'), transform=data_transforms['train'])
+    print(dataset.class_to_idx)
     # Note: Further code would involve setting up DataLoaders for the dataset,
     # creating an instance of the SimpleCNN, defining a loss function and optimizer,
     # and writing the training loop.
@@ -77,7 +74,7 @@ def model_learning():
     model.to(device)
 
     # Training loop
-    num_epochs = 200
+    num_epochs = 50
     for epoch in range(num_epochs):
         model.train()  # Set the model to training mode
         running_loss = 0.0
@@ -118,17 +115,6 @@ def model_learning():
     torch.save(model.state_dict(), 'model_weights_color.pth')
 
     print('Finished Training')
-
-    '''
-    # Create the model instance
-    model = SimpleCNN(num_classes=6)
-    
-    # Load the saved state dict
-    model.load_state_dict(torch.load('model_weights.pth'))
-    
-    # Set the model to evaluation mode
-    model.eval()
-    '''
 
 if __name__ == '__main__':
     model_learning()

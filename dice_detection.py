@@ -103,9 +103,8 @@ def init_nn(model_path):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     # Load the saved state dict
-    model.load_state_dict(torch.load(model_path, map_location=device))
-
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    #model.load_state_dict(torch.load(model_path, map_location=device))
+    model.load_state_dict(torch.load(model_path))
     model.to(device)
 
     # Set the model to evaluation mode

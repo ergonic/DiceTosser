@@ -110,6 +110,8 @@ def main():
 
 def main2():
 
+    label_dict = {0:'A',1:'B',2:'C',3:'D',4:'E',5:'F'}
+
     model = dice_detection.init_nn('model_weights.pth')
 
     filenames = os.listdir("in")
@@ -125,24 +127,28 @@ def main2():
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+    model.eval()
+
     for file in filenames:
-        img = cv2.imread(os.path.join('in',file))
 
-        input_tensor = transform(img)
-
+        img = cv2.imread(os.path.join('in', file))
+        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        input_tensor = transform(img_rgb)
         input_tensor = input_tensor.to(device)
 
         # Make a prediction
         with torch.no_grad():
             prediction = model(input_tensor)
 
-        probabilities = softmax(prediction)
-        print("Prediction:", prediction)
-        print("Probs:", probabilities)
-        predicted_class = torch.argmax(probabilities, dim=1)
+            _, predicted = torch.max(prediction.data, 1)
+            print("File:", file)
+            print("Out:", prediction)
+            print("Probs:", label_dict[predicted[0].item()])
 
-        # Output the predicted class
-        print("Predicted class:", predicted_class.item())
+            #predicted_class = torch.argmax(probabilities, dim=1)
+
+            # Output the predicted class
+            #print("Predicted class:", predicted_class.item())
 
 
 if __name__ == '__main__':
