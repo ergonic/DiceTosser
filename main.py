@@ -16,7 +16,7 @@ def ev3_init():
     my_ev3 = ev3.EV3(
         protocol=ev3.USB,
         host="00:16:53:47:3A:00",
-        verbosity=0
+        verbosity=1
     )
     my_ev3.sync_mode = ev3.SYNC
 
@@ -34,7 +34,8 @@ def DiceIt(my_ev3):
         ev3.LVX(4),  # IP*
         ev3.LCX(0)  # DEBUG
     ))
-    my_ev3.send_direct_cmd(ops, local_mem=8)
+    out = my_ev3.send_direct_cmd(ops, local_mem=8)
+    print(out)
     pass
 
 
