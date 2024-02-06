@@ -104,7 +104,7 @@ def init_nn(model_path):
 
     # Load the saved state dict
     #model.load_state_dict(torch.load(model_path, map_location=device))
-    model.load_state_dict(torch.load(model_path))
+    model.load_state_dict(torch.load(model_path, map_location=device))
     model.to(device)
 
     # Set the model to evaluation mode

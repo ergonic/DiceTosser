@@ -81,7 +81,7 @@ def GetImage(cam, reader, x, y, w, h, res_w, res_h, model):
 
 def main():
 
-    model = dice_detection.init_nn('model_weights.pth')
+    model = dice_detection.init_nn('model_weights_color.pth')
 
     # set variables for openCV and OCR
     cam = camera.CameraCapture(0)

@@ -132,7 +132,7 @@ def main():
     w = int((750 / 1920) * res_w)
     h = int((750 / 1080) * res_h)
 
-    model = dice_detection.init_nn('model_weights.pth')
+    model = dice_detection.init_nn('model_weights_color.pth')
 
     while True:
         DiceIt(my_ev3)
