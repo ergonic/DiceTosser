@@ -17,25 +17,19 @@ def ev3_init():
     my_ev3 = ev3.EV3(
         protocol=ev3.USB,
         host="00:16:53:47:3A:00",
-        verbosity=1
+        verbosity=2
     )
     my_ev3.sync_mode = ev3.SYNC
 
 def DiceItRirect(my_ev3):
 
-    with my_ev3.Motor(
-            ev3.PORT_B,
-            protocol=ev3.USB
-    ) as my_motor:
-        movement_plan = (
-                my_motor.move_by(30, speed=100, ramp_up=90, ramp_down=90, brake=True) +
-                Sleep(0.1) +
-                my_motor.move_by(-30, speed=100, ramp_up=90, ramp_down=90, brake=True) +
-                Sleep(0.1) +
-                my_motor.stop_as_task(brake=False)
+    my_ev3.movement_plan = (
+                my_ev3.move_to(-30, speed=100, ramp_up=100, ramp_down=100, brake=True) +
+                my_ev3.move_to(0, speed=100, ramp_up=100, ramp_down=100, brake=True) +
+                my_ev3.stop_as_task(brake=False)
         )
 
-        movement_plan.start(thread=False)
+    my_ev3.movement_plan.start(thread=False)
         #movement_plan.join()
 
     pass
@@ -55,8 +49,7 @@ def DiceIt(my_ev3):
         ev3.LCX(0)  # DEBUG
     ))
     out = my_ev3.send_direct_cmd(ops, local_mem=8)
-    print(out)
-    pass
+    return out
 
 
 def GetImage(cam, reader, x, y, w, h, res_w, res_h, model):
@@ -136,7 +129,11 @@ def main():
     dataset_output_path = 'out'
 
     # connector to EV3 brick
-    my_ev3 = ev3.EV3(protocol=ev3.USB)
+    my_ev3 = ev3.Motor(
+        ev3.PORT_D,
+        protocol=ev3.USB
+    )
+    #my_ev3.sync_mode = ev3.SYNC
 
     # db connection
     # parameters of the connection can be passed in connect arguments
@@ -156,7 +153,8 @@ def main():
     model = dice_detection.init_nn('model_weights_color.pth')
 
     while True:
-        DiceIt(my_ev3)
+        out = DiceItRirect(my_ev3)
+
         sleep(2)
         toss = GetImage(cam, reader, x, y, w, h, res_w, res_h, model)
 
