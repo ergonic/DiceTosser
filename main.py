@@ -38,7 +38,7 @@ def DiceIt(my_ev3):
     pass
 
 
-def GetImage(cam, reader, x, y, w, h, res_w, res_h):
+def GetImage(cam, reader, x, y, w, h, res_w, res_h, model):
     frame = cam.read()
 
     # cv2.imshow("Original", frame)
@@ -77,21 +77,23 @@ def GetImage(cam, reader, x, y, w, h, res_w, res_h):
     smaller_frame = cv2.resize(frame, dim, interpolation=cv2.INTER_AREA)
     cv2.imshow("Dice detection", smaller_frame)
 
-    detected_letter = dice_detection.test_out_rotations(resized_dice, reader)
-    cv2.putText(frame, detected_letter, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+    #etected_letter = dice_detection.test_out_rotations(resized_dice, reader)
+    #cv2.putText(frame, detected_letter, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+    detected_letter_nn = dice_detection.get_nn_label(model, resized_dice)
+    cv2.putText(frame, detected_letter_nn, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
     now = datetime.now()
     time = now.strftime("%m%d%Y_%H%M%S")
 
     #letter not detected
-    if detected_letter == None:
-        detected_letter = 'X'
+    if detected_letter_nn == None:
+        detected_letter_nn = 'X'
 
     toss = {
-            'toss': detected_letter,
+            'toss': detected_letter_nn,
             'time': time,
             'data': resized_dice,
-            'filename': detected_letter + "_" + time + "_" + str(random.randint(0,255)) + '.png'
+            'filename': detected_letter_nn + "_" + time + "_" + str(random.randint(0,255)) + '.png'
         }
 
     return toss
@@ -130,10 +132,12 @@ def main():
     w = int((750 / 1920) * res_w)
     h = int((750 / 1080) * res_h)
 
+    model = dice_detection.init_nn('model_weights.pth')
+
     while True:
         DiceIt(my_ev3)
         sleep(2)
-        toss = GetImage(cam, reader, x, y, w, h, res_w, res_h)
+        toss = GetImage(cam, reader, x, y, w, h, res_w, res_h, model)
 
         if toss['toss'] == 'X':
             print("Could not detect.")

@@ -115,6 +115,9 @@ def init_nn(model_path):
 
 def get_nn_label(model, dice_image):
 
+    label_dict = {0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E', 5: 'F'}
+    img_rgb = cv2.cvtColor(dice_image, cv2.COLOR_BGR2RGB)
+
     # Define a transform to convert
     # the image to torch tensor
     # Convert to PyTorch tensor and normalize
@@ -122,24 +125,24 @@ def get_nn_label(model, dice_image):
         transforms.ToTensor(),
         transforms.Normalize([0.4798, 0.4511, 0.4503], [0.1495, 0.1556, 0.1532])
     ])
-    input_tensor = transform(dice_image)
+
+    input_tensor = transform(img_rgb)
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     input_tensor = input_tensor.to(device)
 
+    res = None
     # Make a prediction
     with torch.no_grad():
         prediction = model(input_tensor)
 
-    # Process the prediction as needed (e.g., apply softmax if required)
-    softmax = torch.nn.Softmax(dim=1)
-    probabilities = softmax(prediction)
-    print("Prediction:", prediction)
-    print("Probs:", probabilities)
-    predicted_class = torch.argmax(probabilities, dim=1)
+        _, predicted = torch.max(prediction.data, 1)
+        res = label_dict[predicted[0].item()]
 
     # Output the predicted class
-    print("Predicted class:", predicted_class.item())
+    #print("Predicted class:", label_dict[predicted[0].item()])
+
+    return res
 
 
 
