@@ -88,8 +88,8 @@ def GetImage(cam, reader, x, y, w, h, res_w, res_h, model):
     dim = (width, height)
 
     # resize image
-    smaller_frame = cv2.resize(frame, dim, interpolation=cv2.INTER_AREA)
-    cv2.imshow("Dice detection", smaller_frame)
+    #smaller_frame = cv2.resize(frame, dim, interpolation=cv2.INTER_AREA)
+    cv2.imshow("Dice", resized_dice)
 
     #etected_letter = dice_detection.test_out_rotations(resized_dice, reader)
     #cv2.putText(frame, detected_letter, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)

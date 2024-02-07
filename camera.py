@@ -15,6 +15,7 @@ class CameraCapture:
     def _reader(self):
         while self.running:
             ret, frame = self.cap.read()
+
             if not ret:
                 break
             if not self.q.empty():
@@ -29,6 +30,7 @@ class CameraCapture:
 
     def stop(self):
         self.running = False
+        cv2.destroyAllWindows()
         self.thread.join()
         self.cap.release()
 

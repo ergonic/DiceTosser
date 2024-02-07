@@ -26,7 +26,10 @@ def detect_circle_coordinates(image, res_w, res_h):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     # Apply Gaussian blur to reduce noise and improve circle detection
-    gray = cv2.GaussianBlur(gray, (9, 9), 2)
+    #gray = cv2.GaussianBlur(gray, (9, 9), 2)
+    gray = cv2.equalizeHist(gray)
+
+    cv2.imshow('Equalized histogram', gray)
 
     r_min = int((120/1920) * res_w)
     r_max = int((220/1920) * res_w)
