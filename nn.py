@@ -30,21 +30,38 @@ class SimpleCNN(nn.Module):
         x = self.fc2(x)
         return x
 
-def model_learning():
+class SimpleCNNgray(nn.Module):
+    def __init__(self, num_classes=6):
+        super(SimpleCNNgray, self).__init__()
+        self.conv1 = nn.Conv2d(1, 32, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
+        self.conv3 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
+        self.fc1 = nn.Linear(128 * 32 * 32, 512)
+        self.fc1_5 = nn.Linear(512, 128)
+        self.fc2 = nn.Linear(128, num_classes)
+        self.relu = nn.ReLU()
+        self.pool = nn.MaxPool2d(2, 2)
+        self.dropout = nn.Dropout(0.5)
+
+    def forward(self, x):
+        x = self.pool(self.relu(self.conv1(x)))
+        x = self.pool(self.relu(self.conv2(x)))
+        x = self.pool(self.relu(self.conv3(x)))
+        x = x.view(-1, 128 * 32 * 32)
+        x = self.relu(self.fc1(x))
+        x = self.relu(self.fc1_5(x))
+        #x = self.dropout(x)
+        x = self.fc2(x)
+        return x
+
+def model_learning(input_model, data_path, model_export_name, transformations, epoch_number):
 
     # Data augmentation and normalization for training
     # Just normalization for validation
-    data_transforms = {
-        'train': transforms.Compose([
-            transforms.RandomRotation(180),  # Rotation for rotation invariance
-            transforms.ToTensor(),
-            transforms.ColorJitter(0.2,0.2,0.2,0.1),
-            transforms.Normalize([0.4798, 0.4511, 0.4503], [0.1495, 0.1556, 0.1532])
-        ])
-    }
+    data_transforms = transformations
 
     # Create your dataset (replace 'your_data_dir' with the path to your dataset)
-    dataset = datasets.ImageFolder(root=os.path.join('D:','dicetoss_clean_test'), transform=data_transforms['train'])
+    dataset = datasets.ImageFolder(root=data_path, transform=data_transforms['train'])
     print(dataset.class_to_idx)
     # Note: Further code would involve setting up DataLoaders for the dataset,
     # creating an instance of the SimpleCNN, defining a loss function and optimizer,
@@ -64,7 +81,7 @@ def model_learning():
     validation_loader = data.DataLoader(validation_dataset, batch_size=64, shuffle=True, num_workers=0)
 
     # Create an instance of the SimpleCNN and define loss function and optimizer
-    model = SimpleCNN(num_classes=6)
+    model = input_model
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
@@ -74,7 +91,7 @@ def model_learning():
     model.to(device)
 
     # Training loop
-    num_epochs = 50
+    num_epochs = epoch_number
     for epoch in range(num_epochs):
         model.train()  # Set the model to training mode
         running_loss = 0.0
@@ -112,9 +129,30 @@ def model_learning():
         print(f'Validation Accuracy: {100 * correct / total}%')
 
     # Save the model's state_dict
-    torch.save(model.state_dict(), 'model_weights_color.pth')
+    torch.save(model.state_dict(), model_export_name)
 
     print('Finished Training')
 
 if __name__ == '__main__':
-    model_learning()
+
+    data_transforms_color = {
+        'train': transforms.Compose([
+            transforms.RandomRotation(180),  # Rotation for rotation invariance
+            transforms.ToTensor(),
+            transforms.ColorJitter(0.2, 0.2, 0.2, 0.1),
+            transforms.Normalize([0.4798, 0.4511, 0.4503], [0.1495, 0.1556, 0.1532])
+        ])
+    }
+
+    data_transforms_gray = {
+        'train': transforms.Compose([
+            transforms.Grayscale(num_output_channels=1),
+            transforms.RandomRotation(180),  # Rotation for rotation invariance
+            transforms.ToTensor(),
+            transforms.ColorJitter(brightness=0.2, contrast=0.2),
+            transforms.Normalize([0.5049], [0.2935])
+        ])
+    }
+
+    #model_learning(SimpleCNN(num_classes=6), os.path.join('D:','dicetoss_clean_test'), 'model_weights_color.pth', data_transforms_color, 50)
+    model_learning(SimpleCNNgray(num_classes=6), os.path.join('D:','dicetoss_grayscale'), 'model_weights_gray.pth', data_transforms_gray, 20)

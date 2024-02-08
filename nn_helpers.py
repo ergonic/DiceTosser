@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 import numpy as np
 
 # Path to your image folder
-data_dir = 'D:\\dicetoss_clean_test'
+data_dir = 'D:\\dicetoss_grayscale'
 
 # Transform to convert images to PyTorch tensors
 transform = transforms.Compose([
