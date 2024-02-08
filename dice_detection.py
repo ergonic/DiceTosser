@@ -29,7 +29,7 @@ def detect_circle_coordinates(image, res_w, res_h):
     #gray = cv2.GaussianBlur(gray, (9, 9), 2)
     gray = cv2.equalizeHist(gray)
 
-    cv2.imshow('Equalized histogram', gray)
+    #cv2.imshow('Equalized histogram', gray)
 
     r_min = int((120/1920) * res_w)
     r_max = int((220/1920) * res_w)
@@ -57,7 +57,7 @@ def detect_circle_coordinates(image, res_w, res_h):
                     rgb = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
                     cv2.circle(rgb, (x, y), r, (0,255,0), 3)
                     cv2.putText(rgb, 'DICE', (x-r, y-r - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-                    #cv2.imshow('Detected dice', rgb)
+                    cv2.imshow('Detected dice', rgb)
 
                     return ret  # Return x, y, width, and height of the bounding box
                 except:
