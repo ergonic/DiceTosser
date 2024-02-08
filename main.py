@@ -8,18 +8,7 @@ from datetime import datetime
 import dice_detection
 import DB_test
 import camera
-from thread_task import Sleep
-
-
-# initializes connection to the ev3 brick
-def ev3_init():
-
-    my_ev3 = ev3.EV3(
-        protocol=ev3.USB,
-        host="00:16:53:47:3A:00",
-        verbosity=2
-    )
-    my_ev3.sync_mode = ev3.SYNC
+import threading
 
 def DiceItRirect(my_ev3):
 
@@ -30,36 +19,15 @@ def DiceItRirect(my_ev3):
         )
 
     my_ev3.movement_plan.start(thread=False)
-        #movement_plan.join()
-
     pass
-
-def DiceIt(my_ev3):
-    ops = b''.join((
-        ev3.opFile,
-        ev3.LOAD_IMAGE,
-        ev3.LCX(1),  # SLOT
-        ev3.LCS('/home/root/lms2012/prjs/Dicing30/Dicing30.rbf'),  # NAME
-        ev3.LVX(0),  # SIZE
-        ev3.LVX(4),  # IP*
-        ev3.opProgram_Start,
-        ev3.LCX(1),  # SLOT
-        ev3.LVX(0),  # SIZE
-        ev3.LVX(4),  # IP*
-        ev3.LCX(0)  # DEBUG
-    ))
-    out = my_ev3.send_direct_cmd(ops, local_mem=8)
-    return out
-
 
 def GetImage(cam, reader, x, y, w, h, res_w, res_h, model):
     frame = cam.read()
 
-    # cv2.imshow("Original", frame)
-
     center = dice_detection.get_frame_center(frame, x, y, w, h)
 
-    # cv2.imshow("Center", center)
+    cv2.rectangle(frame, (x,y), (x+w, y+h), (255,0,0), 3)
+    cv2.imshow("Dice location", frame)
 
     # blob detection
     dx, dy, dw, dh = dice_detection.detect_circle_coordinates(center, res_w, res_h)
@@ -69,14 +37,13 @@ def GetImage(cam, reader, x, y, w, h, res_w, res_h, model):
         time = now.strftime("%m%d%Y_%H%M%S")
 
         toss = {
-            'toss': 'X',
+            'toss': '-',
             'time': time,
-            'filename': '-'
+            'filename': '-',
+            'probability': '-'
         }
         return toss
     dice = center[dy:dy + dh, dx:dx + dw]
-    cv2.rectangle(frame, (dx + x, dy + y), (dx + x + dw, dy + y + dh), (255, 0, 0), 2)
-    cv2.putText(frame, 'DICE', (dx + x, dy + y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
 
     dim = (256, 256)
     # resize image
@@ -87,27 +54,21 @@ def GetImage(cam, reader, x, y, w, h, res_w, res_h, model):
     height = int(frame.shape[0] * scale_percent / 100)
     dim = (width, height)
 
-    # resize image
-    #smaller_frame = cv2.resize(frame, dim, interpolation=cv2.INTER_AREA)
-    cv2.imshow("Dice", resized_dice)
-
-    #etected_letter = dice_detection.test_out_rotations(resized_dice, reader)
-    #cv2.putText(frame, detected_letter, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-    detected_letter_nn = dice_detection.get_nn_label(model, resized_dice)
-    cv2.putText(frame, detected_letter_nn, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+    detected_letter_nn, probability = dice_detection.get_nn_label(model, resized_dice)
 
     now = datetime.now()
     time = now.strftime("%m%d%Y_%H%M%S")
 
     #letter not detected
-    if detected_letter_nn == None:
+    if detected_letter_nn == None or probability < 0.8:
         detected_letter_nn = 'X'
 
     toss = {
             'toss': detected_letter_nn,
             'time': time,
             'data': resized_dice,
-            'filename': detected_letter_nn + "_" + time + "_" + str(random.randint(0,255)) + '.png'
+            'filename': detected_letter_nn + "_" + time + "_" + str(random.randint(0,255)) + '.png',
+            'probability': probability
         }
 
     return toss
@@ -120,7 +81,6 @@ def save_image(path, toss):
     if 'data' in toss.keys():
         filepath = os.path.join(path,toss['toss'],toss['filename'])
         cv2.imwrite(filepath, toss['data'])
-
 
 def main():
 
@@ -158,17 +118,20 @@ def main():
         sleep(2)
         toss = GetImage(cam, reader, x, y, w, h, res_w, res_h, model)
 
-        if toss['toss'] == 'X':
-            print("Could not detect.")
+        if toss['toss'] == '-':
+            print("Could not detect dice.")
+        elif toss['toss'] == 'X':
+            print("CNN uncertain (probability under 80%).")
+            print(toss['toss'], 'time:', toss['time'], 'p =', toss['probability'])
         else:
-            print(toss['toss'], toss['time'], len(toss['data']))
-        #save img
+            print(toss['toss'], 'time:', toss['time'], 'p =', toss['probability'])
+        # save img
         save_image(dataset_output_path, toss)
 
-        #db insert
+        # db insert
         DB_test.insert_toss(cnx, toss)
 
-        #sleep(0.2)
+        # sleep(0.2)
 
         # end with whatever key pressed
         if cv2.waitKey(1) != -1:
@@ -176,11 +139,10 @@ def main():
 
         pass
 
-    # release all OpenCV thingies
+        # release all OpenCV thingies
     cam.stop()
     cv2.destroyAllWindows()
     DB_test.close_connection(cnx)
 
 if __name__ == '__main__':
-    #ev3_init()
     main()

@@ -53,6 +53,12 @@ def detect_circle_coordinates(image, res_w, res_h):
                     if (x-r > imgx) or (y-r > imgy) or (x-r < 0) or (y-r < 0):
                         return -1, -1, -1, -1
 
+                    #draw circle in the grayscale image
+                    rgb = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+                    cv2.circle(rgb, (x, y), r, (0,255,0), 3)
+                    cv2.putText(rgb, 'DICE', (x-r, y-r - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                    #cv2.imshow('Detected dice', rgb)
+
                     return ret  # Return x, y, width, and height of the bounding box
                 except:
                     return -1, -1, -1, -1
@@ -106,7 +112,6 @@ def init_nn(model_path):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     # Load the saved state dict
-    #model.load_state_dict(torch.load(model_path, map_location=device))
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.to(device)
 
@@ -117,6 +122,8 @@ def init_nn(model_path):
 
 
 def get_nn_label(model, dice_image):
+
+    cv2.imshow('CNN input', dice_image)
 
     label_dict = {0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E', 5: 'F'}
     img_rgb = cv2.cvtColor(dice_image, cv2.COLOR_BGR2RGB)
@@ -139,12 +146,12 @@ def get_nn_label(model, dice_image):
     with torch.no_grad():
         prediction = model(input_tensor)
 
-        _, predicted = torch.max(prediction.data, 1)
-        res = label_dict[predicted[0].item()]
+        probs = torch.softmax(prediction.data, dim=1)
+
+        probability, predicted = torch.max(probs, 1)
+        res = [label_dict[predicted[0].item()], probability[0].item()]
 
     # Output the predicted class
-    #print("Predicted class:", label_dict[predicted[0].item()])
-
     return res
 
 
